@@ -156,25 +156,26 @@
    	var cAUTHENTICATION_SUCCESSFUL = 3;
    	var cAUTHENTICATION_EXCEPTION_OCCURED = 4;
    	var cUSERNAME_OR_PASSWORD_INCORRECT = 5;
+	var cLOGIN_ATTEMPTS = 0;
    	
    	var lMessage = "";
    	var lAuthenticationFailed = "FALSE";
    	
 	switch(lAuthenticationAttemptResultFlag){
    		case cACCOUNT_DOES_NOT_EXIST: 
-   	   		lMessage="Account does not exist"; lAuthenticationFailed = "TRUE";
+   	   		lMessage="Account does not exist"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1;
    	   		break;
    		case cPASSWORD_INCORRECT: 
-   	   		lMessage="Password incorrect"; lAuthenticationFailed = "TRUE"; 
+   	   		lMessage="Password incorrect"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1; 
    	   		break;
    		case cNO_RESULTS_FOUND: 
-   	   		lMessage="No results found"; lAuthenticationFailed = "TRUE"; 
+   	   		lMessage="No results found"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1; 
    	   		break;
    		case cAUTHENTICATION_EXCEPTION_OCCURED: 
-   	   		lMessage="Exception occurred"; lAuthenticationFailed = "TRUE"; 
+   	   		lMessage="Exception occurred"; lAuthenticationFailed = "TRUE";  cLOGIN_ATTEMPTS += 1;
    		break;
    		case cUSERNAME_OR_PASSWORD_INCORRECT: 
-   	   		lMessage="Username or password incorrect"; lAuthenticationFailed = "TRUE"; 
+   	   		lMessage="Username or password incorrect"; lAuthenticationFailed = "TRUE";  cLOGIN_ATTEMPTS += 1;
    		break;
    	};
 

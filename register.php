@@ -180,6 +180,9 @@
 				</td>
 			</tr>
 			<tr>
+				<td>Password must contain the following:  - At least 8 Characters - A uppercase letter - A lowercase letter  - A special character  - A number</td>
+			</tr>
+			<tr>
 				<td class="label">Confirm Password</td>
 				<td>
 					<input type="password" name="confirm_password" size="15"
