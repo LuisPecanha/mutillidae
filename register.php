@@ -85,7 +85,22 @@
 				$lValidationFailed = TRUE;
 		   		echo '<h2 class="error-message">Passwords do not match</h2>';
 		   	}// end if
-						   	
+			if(!preg_match("#[0-9]+#",$lPassword)) {
+				$lValidationFailed = TRUE;
+				echo '<h2 class="error-message">Your Password Must Contain At Least 1 Number</h2>';
+				$passwordErr = "Must Contain At Least 1 Number";
+			}
+			elseif(!preg_match("#[A-Z]+#",$lPassword)) {
+				$lValidationFailed = TRUE;
+				echo '<h2 class="error-message">Your Password Must Contain At Least 1 Capital Letter</h2>';
+				$passwordErr = "Must Contain At Least 1 Capital Letter";
+			}
+			elseif(!preg_match("#[a-z]+#",$lPassword)) {
+				$lValidationFailed = TRUE;
+				echo '<h2 class="error-message">Your Password Must Contain At Least 1 Lowercase Letter</h2>';
+				$passwordErr = "Must Contain At Least 1 Lowercase Letter";
+			}
+						   
 		   	if (!$lValidationFailed){					
 		   		$lRowsAffected = $SQLQueryHandler->insertNewUserAccount($lUsername, $lPassword, $lUserSignature);
 				echo '<h2 class="success-message">Account created for ' . $lUsernameText .'. '.$lRowsAffected.' rows inserted.</h2>';
@@ -97,7 +112,7 @@
 			$LogHandler->writeToLog("Failed to add account for: " . $lUsername);			
 		}// end try
 			
-	}// end if $lFormSubmitted
+	}// end if (isset($_POST["register-php-submit-button"])){
 ?>
 
 <script type="text/javascript">
@@ -135,6 +150,25 @@
 //-->
 </script>
 
+<!-- Bubble hints code -->
+<?php 
+	try{
+   		$lHTMLandXSSandSQLInjectionPointBalloonTip = $BubbleHintHandler->getHint("HTMLandXSSandSQLInjectionPoint");
+   		$lSQLInjectionPointBallonTip = $BubbleHintHandler->getHint("SQLInjectionPoint");
+	} catch (Exception $e) {
+		echo $CustomErrorHandler->FormatError($e, "Error attempting to execute query to fetch bubble hints.");
+	}// end try
+?>
+
+<script type="text/javascript">
+	$(function() {
+		$('[HTMLandXSSandSQLInjectionPoint]').attr("title", "<?php echo $lHTMLandXSSandSQLInjectionPointBalloonTip; ?>");
+		$('[HTMLandXSSandSQLInjectionPoint]').balloon();
+		$('[SQLInjectionPoint]').attr("title", "<?php echo $lSQLInjectionPointBallonTip; ?>");
+		$('[SQLInjectionPoint]').balloon();	
+	});
+</script>
+
 <span>
 	<a style="text-decoration: none; cursor: pointer;" href="./webservices/rest/ws-user-account.php">
 		<img style="vertical-align: middle;" src="./images/ajax_logo-75-79.jpg" height="75px" width="78px" />
@@ -147,7 +181,12 @@
 			onsubmit="return onSubmitOfForm(this);"
 			>
 		<input name="csrf-token" type="hidden" value="<?php echo $lNewCSRFTokenForNextRequest; ?>" />
-		<table>
+		<table style="margin-left:auto; margin-right:auto;">
+			<tr id="id-bad-cred-tr" style="display: none;">
+				<td colspan="2" class="error-message">
+					Authentication Error: Bad user name or password
+				</td>
+			</tr>
 			<tr><td>&nbsp;</td></tr>
 			<tr>
 				<td colspan="2" class="form-header">Please choose your username, password and signature</td>
@@ -156,7 +195,7 @@
 			<tr>
 				<td class="label">Username</td>
 				<td>
-					<input type="text" name="username" size="15" autofocus="autofocus"
+					<input HTMLandXSSandSQLInjectionPoint="1" type="text" name="username" size="15" autofocus="autofocus"
 						<?php
 							if ($lEnableHTMLControls) {
 								echo('minlength="1" maxlength="15" required="required"');
@@ -168,7 +207,7 @@
 			<tr>
 				<td class="label">Password</td>
 				<td>
-					<input type="password" name="password" size="15" 
+					<input SQLInjectionPoint="1" type="password" name="password" size="15" 
 						<?php
 							if ($lEnableHTMLControls) {
 								echo('minlength="1" maxlength="15" required="required"');
@@ -180,12 +219,9 @@
 				</td>
 			</tr>
 			<tr>
-				<td>Password must contain the following:  - At least 8 Characters - A uppercase letter - A lowercase letter  - A special character  - A number</td>
-			</tr>
-			<tr>
 				<td class="label">Confirm Password</td>
 				<td>
-					<input type="password" name="confirm_password" size="15"
+					<input SQLInjectionPoint="1" type="password" name="confirm_password" size="15"
 						<?php
 							if ($lEnableHTMLControls) {
 								echo('minlength="1" maxlength="15" required="required"');
@@ -197,7 +233,7 @@
 			<tr>
 				<td class="label">Signature</td>
 				<td>
-					<textarea rows="3" cols="50" name="my_signature"
+					<textarea HTMLandXSSandSQLInjectionPoint="1" rows="3" cols="50" name="my_signature"
 						<?php
 							if ($lEnableHTMLControls) {
 								echo('minlength="1" maxlength="100" required="required"');
