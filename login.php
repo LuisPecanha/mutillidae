@@ -1,4 +1,11 @@
 <?php 
+	if(isset($_SESSION["locked"])){
+		$difference = time() - $_SESSION["locked"];
+		if($difference > 10){
+			unset($_SESSION["locked"]);
+			unset($_SESSION["login_attempts"]);
+		}
+	}
 	try {	    	
     	switch ($_SESSION["security-level"]){
     		case "0": // This code is insecure.
@@ -72,6 +79,26 @@
 //-->
 </script>
 
+<!-- Bubble hints code -->
+<?php 
+	try{
+   		$lReflectedXSSExecutionPointBallonTip = $BubbleHintHandler->getHint("ReflectedXSSExecutionPoint");
+   		$lSQLInjectionPointBallonTip = $BubbleHintHandler->getHint("SQLInjectionPoint");
+   		
+	} catch (Exception $e) {
+		echo $CustomErrorHandler->FormatError($e, "Error attempting to execute query to fetch bubble hints.");
+	}// end try
+?>
+
+<script type="text/javascript">
+	$(function() {
+		$('[ReflectedXSSExecutionPoint]').attr("title", "<?php echo $lReflectedXSSExecutionPointBallonTip; ?>");
+		$('[ReflectedXSSExecutionPoint]').balloon();
+		$('[SQLInjectionPoint]').attr("title", "<?php echo $lSQLInjectionPointBallonTip; ?>");
+		$('[SQLInjectionPoint]').balloon();		
+	});
+</script>
+
 <div class="page-title">Login</div>
 
 <?php include_once (__ROOT__.'/includes/back-button.inc');?>
@@ -83,7 +110,7 @@
 			enctype="application/x-www-form-urlencoded" 
 			onsubmit="return onSubmitOfLoginForm(this);"
 			id="idLoginForm">
-		<table>
+		<table style="margin-left:auto; margin-right:auto;">
 			<tr id="id-authentication-failed-tr" style="display: none;">
 				<td id="id-authentication-failed-td" colspan="2" class="error-message"></td>
 			</tr>
@@ -95,7 +122,7 @@
 			<tr>
 				<td class="label">Username</td>
 				<td>
-					<input	type="text" name="username" size="20"
+					<input	SQLInjectionPoint="1" type="text" name="username" size="20"
 							autofocus="autofocus"
 					<?php
 						if ($lEnableHTMLControls) {
@@ -108,7 +135,7 @@
 			<tr>
 				<td class="label">Password</td>
 				<td>
-					<input type="password" name="password" size="20"
+					<input SQLInjectionPoint="1" type="password" name="password" size="20"
 					<?php
 						if ($lEnableHTMLControls) {
 							echo('minlength="1" maxlength="15" required="required"');
@@ -120,13 +147,16 @@
 			<tr><td></td></tr>
 			<tr>
 				<td colspan="2" style="text-align:center;">
-					<input name="login-php-submit-button" class="button" type="submit" value="Login" />
+				
+					<input name="login-php-submit-button" class="button" type="submit" value="Login"<?php echo isset($_SESSION['locked-button']) ? 'disabled="true"' : ''; ?>/>
+					
+					
 				</td>
 			</tr>
 			<tr><td></td></tr>
 			<tr>
 				<td colspan="2" style="text-align:center; font-style: italic;">
-					Dont have an account? <a href="index.php?page=register.php">Please register here</a>
+					Dont have an account? <a href="?page=register.php">Please register here</a>
 				</td>
 			</tr>
 		</table>
@@ -136,7 +166,7 @@
 <div id="id-log-out-div" style="text-align: center; display: none;">
 	<table>
 		<tr>
-			<td colspan="2" class="hint-header">You are logged in as <?php echo $_SESSION['logged_in_user']; ?></td>
+			<td ReflectedXSSExecutionPoint="1" colspan="2" class="hint-header">You are logged in as <?php echo $_SESSION['logged_in_user']; ?></td>
 		</tr>
 		<tr><td></td></tr>
 		<tr><td></td></tr>
@@ -156,26 +186,36 @@
    	var cAUTHENTICATION_SUCCESSFUL = 3;
    	var cAUTHENTICATION_EXCEPTION_OCCURED = 4;
    	var cUSERNAME_OR_PASSWORD_INCORRECT = 5;
-	var cLOGIN_ATTEMPTS = 0;
    	
    	var lMessage = "";
    	var lAuthenticationFailed = "FALSE";
    	
 	switch(lAuthenticationAttemptResultFlag){
    		case cACCOUNT_DOES_NOT_EXIST: 
-   	   		lMessage="Account does not exist"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1;
+   	   		lMessage="Account does not exist"; lAuthenticationFailed = "TRUE";
    	   		break;
    		case cPASSWORD_INCORRECT: 
-   	   		lMessage="Password incorrect"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1; 
+			<?php $_SESSION["login_attempts"]+=1;?>
+			//alert("Error: " );
+			var login_attempts = <?php echo $_SESSION["login_attempts"];?>;
+			if (parseInt(login_attempts, 32) >= 3){
+				//document.getElementById("Button").disabled = true;
+				<?php $_SESSION["locked"] = time();?>
+				document.getElementById("id-log-in-form-div").disabled = true;
+				lMessage="Password incorrect, wait 10 seconds "; lAuthenticationFailed = "TRUE"; 
+			}else{
+				lMessage="Password incorrect" ; lAuthenticationFailed = "TRUE"; 
+			}
+   	   		//lMessage="Password incorrect"; lAuthenticationFailed = "TRUE"; 
    	   		break;
    		case cNO_RESULTS_FOUND: 
-   	   		lMessage="No results found"; lAuthenticationFailed = "TRUE"; cLOGIN_ATTEMPTS += 1; 
+   	   		lMessage="No results found"; lAuthenticationFailed = "TRUE"; 
    	   		break;
    		case cAUTHENTICATION_EXCEPTION_OCCURED: 
-   	   		lMessage="Exception occurred"; lAuthenticationFailed = "TRUE";  cLOGIN_ATTEMPTS += 1;
+   	   		lMessage="Exception occurred"; lAuthenticationFailed = "TRUE"; 
    		break;
    		case cUSERNAME_OR_PASSWORD_INCORRECT: 
-   	   		lMessage="Username or password incorrect"; lAuthenticationFailed = "TRUE";  cLOGIN_ATTEMPTS += 1;
+   	   		lMessage="Username or password incorrect"; lAuthenticationFailed = "TRUE"; 
    		break;
    	};
 
@@ -188,6 +228,7 @@
 		document.getElementById("id-log-in-form-div").style.display="";
 		document.getElementById("id-log-out-div").style.display="none";
 	}else{
+		$_SESSION["login_attempts"] = 0;
 		document.getElementById("id-log-in-form-div").style.display="none";
 		document.getElementById("id-log-out-div").style.display="";		
 	}// end if l_loggedIn	
